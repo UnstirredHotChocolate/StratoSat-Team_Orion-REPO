@@ -39,7 +39,7 @@ void setup(void)
 void loop(void)
 {
   //
-  unsigned long tStart = micros();
+  unsigned long tStart = millis(); // Edit time from micros() to millis()
   sensors_event_t orientationData , linearAccelData;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   //  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
