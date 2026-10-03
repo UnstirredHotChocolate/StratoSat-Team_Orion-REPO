@@ -22,7 +22,8 @@
 #include "Adafruit_Sensor.h"
 #include <Adafruit_BME280.h>
 
-#include "ORION.h"
+// #include "ORION.h"
+#include "ORION_BME280.h"
 
 #define BME_SCK 13
 #define BME_MISO 12
@@ -32,45 +33,42 @@
 #define SEALEVELPRESSURE_HPA (1013.25)
 
 Adafruit_BME280 bme; // I2C
-data enviro_telemetry; // Call struct 'data'
+
 //Adafruit_BME280 bme(BME_CS); // hardware SPI
 //Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK); // software SPI
 
-void readValues(float &temperature, float &pressure, int &altitude, float &humidity); // function declaration
-// void grabAltitude(int &CURRENT_ALTITUDE);
-void setup();
-void loop();
 
-void setup() {
-    Serial.begin(115200);
-    while(!Serial);    // time to get serial running
-    Serial.println(F("BME280 test"));
-    unsigned status;
 
-    // default settings
-    status = bme.begin();  
-    // You can also pass in a Wire library object like &Wire2
-    // status = bme.begin(0x76, &Wire2)
-    if (!status) {
-        Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-        Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
-        Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-        Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-        Serial.print("        ID of 0x60 represents a BME 280.\n");
-        Serial.print("        ID of 0x61 represents a BME 680.\n");
-        while (1) delay(10);
-    }
+// void BMEsetup() { //TODO: move this to main.cpp and call it in setup() function AND properly format.
+//     // Serial.begin(115200);
+//     while(!Serial);    // time to get serial running
+//     Serial.println(F("BME280 test"));
+//     unsigned BME_status;
+
+//     // default settings
+//     BME_status = bme.begin();  
+//     // You can also pass in a Wire library object like &Wire2
+//     // status = bme.begin(0x76, &Wire2)
+//     if (!BME_status) {
+//         Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
+//         Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
+//         Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+//         Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+//         Serial.print("        ID of 0x60 represents a BME 280.\n");
+//         Serial.print("        ID of 0x61 represents a BME 680.\n");
+//         while (1) delay(10);
+//     }
     
-    Serial.println("-- Default Test --");
+//     Serial.println("-- Default Test --");
 
-    Serial.println();
-}
+//     Serial.println();
+// }
 
 
-void loop() { 
-    readValues(enviro_telemetry.TEMPERATURE, enviro_telemetry.PRESSURE, enviro_telemetry.ALTITUDE, enviro_telemetry.HUMIDITY);
-}
-void readValues(float &temperature, float &pressure, int &altitude, float &humidity) {
+// void loop() { 
+//     readValues(enviro_telemetry.TEMPERATURE, enviro_telemetry.PRESSURE, enviro_telemetry.ALTITUDE, enviro_telemetry.HUMIDITY);
+// }
+void readEnviroValues(float &temperature, float &pressure, int &altitude, float &humidity) {
     Serial.print("Temperature = ");
     Serial.print(bme.readTemperature());
     Serial.println(" °C");
