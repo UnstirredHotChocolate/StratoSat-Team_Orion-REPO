@@ -21,7 +21,7 @@ double GYRO_Z; // Use in PID Controller
 
 };
 
-
+data telemetry;
 
 
 
