@@ -1,5 +1,4 @@
 #ifndef ORION_H
-
 #define ORION_H
 
 enum state {LAUNCH, ASCENT, STABILIZATION, DESCENT, LANDED} CURRENT_STATE; //How we'll set the state
