@@ -21,7 +21,9 @@ double ACCEL_Z;
 double GYRO_X; // Use in Proportional Intergral Derivative (PID) Controller
 double GYRO_Y; // Use in PID Controller
 double GYRO_Z; // Use in PID Controller
-
+double ORIENT_X;
+double ORIENT_Y;
+double ORIENT_Z;
 };
 
 data telemetry;
