@@ -18,7 +18,7 @@ void setup() {
   Serial.println("Found INA260 chip");
 }
 
-void loop() {
+void printPowerReport() {
   Serial.print("Current: ");
   Serial.print(ina260.readCurrent());
   Serial.println(" mA");

@@ -8,8 +8,9 @@ enum state {LAUNCH, ASCENT, STABILIZATION, DESCENT, LANDED} CURRENT_STATE; //How
 
 struct data {
 
+unsigned int MISSION_TIME;
 state CURRENT_STATE;
-int ALTITUDE;// 
+float ALTITUDE;// 
 int FIVESEC_ALT; //
 float TEMPERATURE;
 float PRESSURE;
@@ -24,6 +25,10 @@ double GYRO_Z; // Use in PID Controller
 double ORIENT_X;
 double ORIENT_Y;
 double ORIENT_Z;
+
+double GPS_LATITUDE;
+double GPS_LONGITUDE;
+double GPS_ALTITUDE;
 };
 
 data telemetry;
