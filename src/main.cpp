@@ -9,13 +9,12 @@
 #include "ORION.h"
 #include "SHC_BME280.h"
 #include "SHC_BNO055.h"
-// #include "SHC_M9N.h"
-
+#include "SHC_M9N.h"
 // put function declarations here:
 Error ErrorCode;
 SHC_BME280 BMEsensor;
 BNO055 BNOsensor;
-// M9N M9Nsensor;
+M9N M9Nsensor;
 // File telemetryFile;
 void setup() {
   // put your setup code here, to run once:
@@ -34,6 +33,7 @@ void loop() {
   // M9Nsensor.prefetchData(); // Prefetch data from the M9N sensor
   BMEsensor.prefetchData();
   BNOsensor.prefetchData();
+  M9Nsensor.prefetchData();
       if (ErrorCode == 1){
     digitalWrite(LED_BUILTIN, HIGH);
     Serial.print("Error Code: 1");
