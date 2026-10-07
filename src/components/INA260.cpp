@@ -1,6 +1,6 @@
-// #include <Arduino.h>
-// #include <Adafruit_INA260.h>
-
+#include <Arduino.h>
+#include <Adafruit_INA260.h>
+#include "ORION_INA260.h"
 
 // Adafruit_INA260 ina260 = Adafruit_INA260();
 
@@ -18,19 +18,19 @@
 // //   Serial.println("Found INA260 chip");
 // // }
 
-// void printPowerReport() {
-//   Serial.print("Current: ");
-//   Serial.print(ina260.readCurrent());
-//   Serial.println(" mA");
+void printPowerReport() {
+  Serial.print("Current: ");
+  Serial.print(ina260.readCurrent());
+  Serial.println(" mA");
 
-//   Serial.print("Bus Voltage: ");
-//   Serial.print(ina260.readBusVoltage());
-//   Serial.println(" mV");
+  Serial.print("Bus Voltage: ");
+  Serial.print(ina260.readBusVoltage());
+  Serial.println(" mV");
 
-//   Serial.print("Power: ");
-//   Serial.print(ina260.readPower());
-//   Serial.println(" mW");
+  Serial.print("Power: ");
+  Serial.print(ina260.readPower());
+  Serial.println(" mW");
 
-//   Serial.println();
-//   delay(1000);
-// }
+  Serial.println();
+  delay(1000);
+}
