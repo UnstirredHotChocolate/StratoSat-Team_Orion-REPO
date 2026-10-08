@@ -9,6 +9,7 @@ enum state {LAUNCH, ASCENT, STABILIZATION, DESCENT, LANDED} CURRENT_STATE; //How
 struct data {
 
 unsigned int MISSION_TIME;
+unsigned int UTC_TIME;
 state CURRENT_STATE;
 float ALTITUDE;// 
 int FIVESEC_ALT; //
