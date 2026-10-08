@@ -12,7 +12,6 @@ unsigned int MISSION_TIME;
 unsigned int UTC_TIME;
 state CURRENT_STATE;
 float ALTITUDE;// 
-int FIVESEC_ALT; //
 float TEMPERATURE;
 float PRESSURE;
 float HUMIDITY;
