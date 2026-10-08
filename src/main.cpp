@@ -12,7 +12,31 @@
 #include "SHC_M9N.h"
 #include "ORION_INA260.h"
 /*
+-----------------------------------------------------
+SOFTWARE STATE VARIABLES:
+*/
+void stateBoolCheck();
+state CURRENT_STATE = LAUNCH; //Start in the launch state
+float deltaAlt; // Determine state changes based on altitude change
+float currentAlt;
+float previousAlt;
+float threshold_alt;
+float deltaPressure; // Determine state changes based on pressure change
+float currentPressure;
+float previousPressure;
+unsigned long STATE_timerStart;
+unsigned long current_time;
 
+bool ASCENT_condition;
+bool STABILIZATION_condition; 
+bool DESCENT_condition;
+bool LANDED_condition;
+bool STATE_condition;
+bool STATE_timerStarted;
+
+
+/*
+-----------------------------------------------------
 CLASS CALLS and VARIABLE DECLARATIONS 
 -----------------------------------------------------
 */
@@ -20,7 +44,7 @@ Error ErrorCode;
 SHC_BME280 BMEsensor;
 BNO055 BNOsensor;
 M9N M9Nsensor;
-Adafruit_INA260 ina260 = Adafruit_INA260();
+// Adafruit_INA260 ina260 = Adafruit_INA260();
 /*
 -----------------------------------------------------
 PID CONTROLLER STUFF
@@ -49,10 +73,13 @@ double output_Z; //
 double Kp = 1.0; // Proportional gain
 double Ki = 1.0; // Integral gain
 double Kd = 1.0; // Derivative gain
+// PID declarations;
+double PID_X(double error_X);
+double PID_Y(double error_Y);
+double PID_Z(double error_Z);
 //--------------------------------------------------- 
 
-void grabTelemetry(data &telemetry);
-void printTelemetry(data telemetry);
+
 
 
 // File telemetryFile; //Create a .csv file
@@ -71,10 +98,12 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  // Determine deltaTime
   //Do prefetches to get measurement 
-  // M9Nsensor.prefetchData();
+  current_time = millis();
+  M9Nsensor.prefetchData();
   BMEsensor.prefetchData();
-  // BNOsensor.prefetchData();
+  BNOsensor.prefetchData();
   if (ErrorCode == 1){
     Serial.println("Error Code: 1");
   }
@@ -84,27 +113,68 @@ void loop() {
   printPowerReport(); // INA260 measurements
   grabTelemetry(telemetry);
   printTelemetry(telemetry);
-  delay(1000);
+  stateBoolCheck();
+
+
+
   //If altitude is above a certain threshold, do PID control
-  // output_X = PID_X(error_X);
-  // output_Y = PID_Y(error_Y);
-  // output_Z = PID_Z(error_Z);
-  /*
-  analogWrite(PWM_X, output_X); //Actuate control for X
-  analogWrite(PWM_Y, output_Y); //Actuate control for Y
-  analogWrite(PWM_Z, output_Z); //Actuate control for Z 
+
+  error_X = target_X - telemetry.GYRO_X;
+  error_Y = target_Y - telemetry.GYRO_Y;
+  error_Z = target_Z - telemetry.GYRO_Z;
+  output_X = PID_X(error_X);
+  output_Y = PID_Y(error_Y);
+  output_Z = PID_Z(error_Z);
+  // analogWrite(PWM_X, output_X); //Actuate control for X
+  // analogWrite(PWM_Y, output_Y); //Actuate control for Y
+  // analogWrite(PWM_Z, output_Z); //Actuate control for Z 
   
-*/
+
   // // ADD MORE TELEMETRY DATA HERE LATER 
-  // //
+  //
 
 
 }
 
+void stateBoolCheck(){
+    // Boolean state checks
+  previousAlt = currentAlt;
+  currentAlt = telemetry.ALTITUDE;
+  previousPressure = currentPressure;
+  currentPressure = telemetry.PRESSURE;
+  deltaAlt = currentAlt - previousAlt;
+  deltaPressure = currentPressure - previousPressure;
+  ASCENT_condition = (deltaAlt > 0 && deltaPressure < 0) && (telemetry.ALTITUDE < threshold_alt); //; 
+  STABILIZATION_condition = telemetry.ALTITUDE > threshold_alt;
+  DESCENT_condition = deltaAlt < 0 && deltaPressure > 0;
+//---------------------------------------------
+// Set up timing flag
+
+if ((ASCENT_condition || STABILIZATION_condition || DESCENT_condition) && !STATE_timerStarted){
+  STATE_timerStarted = true; 
+  STATE_timerStart = current_time;
+}
+else if (!ASCENT_condition && !STABILIZATION_condition && !DESCENT_condition && !LANDED_condition){
+  STATE_timerStarted = false;
+}
+
+
+if (ASCENT_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = ASCENT;
+}
+else if (STABILIZATION_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = STABILIZATION;
+}
+else if (DESCENT_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = DESCENT;
+}
+}
 //17 reference vars // Directly reference the struct to save memory
 void grabTelemetry
 (data &telemetry)
 {
+    // Teensy outputs
+  telemetry.MISSION_TIME = millis();
     // //BME outputs
   telemetry.ALTITUDE = BMEsensor.getAltitude();
   telemetry.PRESSURE = BMEsensor.getPressure();
@@ -121,7 +191,7 @@ void grabTelemetry
   telemetry.ORIENT_Y = BNOsensor.getOrientationY();
   telemetry.ORIENT_Z = BNOsensor.getOrientationZ();
   // M9N outputs
-  telemetry.MISSION_TIME = M9Nsensor.getUnixTime();
+  telemetry.UTC_TIME = M9Nsensor.getUnixTime();
   telemetry.GPS_ALTITUDE = M9Nsensor.getAltitude();
   telemetry.GPS_LATITUDE = M9Nsensor.getLatitude();
   telemetry.GPS_LONGITUDE = M9Nsensor.getLongitude();
@@ -129,8 +199,27 @@ void grabTelemetry
 }
 
 void printTelemetry(data telemetry){
+  //Teensy output
+  Serial.print("CURRENT_STATE: ");
+  if (CURRENT_STATE == LAUNCH){
+    Serial.print("LAUNCH, ");
+  }
+  else if (CURRENT_STATE == ASCENT){
+    Serial.print("ASCENT, ");
+  }
+  else if (CURRENT_STATE == STABILIZATION){
+    Serial.print("STABILIZATION, ");
+  }
+  else if (CURRENT_STATE == DESCENT){
+    Serial.print("DESCENT, ");
+  }
+  else if (CURRENT_STATE == LANDED){
+    Serial.print("LANDED, ");
+  }
+  Serial.print("MISSION_TIME (ms): ");
+  Serial.print(telemetry.MISSION_TIME);
   //BME output
-  Serial.print("Altitude: ");
+  Serial.print("ms, Altitude: ");
   Serial.print(telemetry.ALTITUDE);
   Serial.print(", Pressure: ");
   Serial.print(telemetry.PRESSURE);
@@ -238,3 +327,4 @@ void printPowerReport() {
   Serial.println();
   delay(1000);
 }
+
