@@ -79,7 +79,8 @@ double PID_Y(double error_Y);
 double PID_Z(double error_Z);
 //--------------------------------------------------- 
 
-
+void grabTelemetry(data &telemetry);
+void printTelemetry(data telemetry);
 
 
 // File telemetryFile; //Create a .csv file
@@ -102,32 +103,32 @@ void loop() {
   //Do prefetches to get measurement 
   current_time = millis();
   M9Nsensor.prefetchData();
-  BMEsensor.prefetchData();
-  BNOsensor.prefetchData();
+  // BMEsensor.prefetchData();
+  // BNOsensor.prefetchData();
+  digitalWrite(LED_BUILTIN, HIGH);
   if (ErrorCode == 1){
     Serial.println("Error Code: 1");
   }
   else {
     Serial.println("Error Code: 0");
   }
-  printPowerReport(); // INA260 measurements
   grabTelemetry(telemetry);
   printTelemetry(telemetry);
-  stateBoolCheck();
+  // stateBoolCheck();
 
 
 
-  //If altitude is above a certain threshold, do PID control
+  // //If CURRENT_STATE is STABILIZATION do PID control
 
-  error_X = target_X - telemetry.GYRO_X;
-  error_Y = target_Y - telemetry.GYRO_Y;
-  error_Z = target_Z - telemetry.GYRO_Z;
-  output_X = PID_X(error_X);
-  output_Y = PID_Y(error_Y);
-  output_Z = PID_Z(error_Z);
-  // analogWrite(PWM_X, output_X); //Actuate control for X
-  // analogWrite(PWM_Y, output_Y); //Actuate control for Y
-  // analogWrite(PWM_Z, output_Z); //Actuate control for Z 
+  // error_X = target_X - telemetry.GYRO_X;
+  // error_Y = target_Y - telemetry.GYRO_Y;
+  // error_Z = target_Z - telemetry.GYRO_Z;
+  // output_X = PID_X(error_X);
+  // output_Y = PID_Y(error_Y);
+  // output_Z = PID_Z(error_Z);
+  // // analogWrite(PWM_X, output_X); //Actuate control for X
+  // // analogWrite(PWM_Y, output_Y); //Actuate control for Y
+  // // analogWrite(PWM_Z, output_Z); //Actuate control for Z 
   
 
   // // ADD MORE TELEMETRY DATA HERE LATER 
@@ -140,34 +141,35 @@ void stateBoolCheck(){
     // Boolean state checks
   previousAlt = currentAlt;
   currentAlt = telemetry.ALTITUDE;
-  previousPressure = currentPressure;
+  previousPressure = currentPressure; 
   currentPressure = telemetry.PRESSURE;
-  deltaAlt = currentAlt - previousAlt;
-  deltaPressure = currentPressure - previousPressure;
-  ASCENT_condition = (deltaAlt > 0 && deltaPressure < 0) && (telemetry.ALTITUDE < threshold_alt); //; 
-  STABILIZATION_condition = telemetry.ALTITUDE > threshold_alt;
-  DESCENT_condition = deltaAlt < 0 && deltaPressure > 0;
+  deltaAlt = currentAlt - previousAlt; // As altitude increases, altitude increases. Check the sign of deltaAlt. 
+  deltaPressure = currentPressure - previousPressure; // As altitude increases, pressure decreases. Check the sign of deltaPressure.  
+  ASCENT_condition = (deltaAlt > 0 && deltaPressure < 0) && (telemetry.ALTITUDE < threshold_alt); // Are you flying? 
+  STABILIZATION_condition = telemetry.ALTITUDE > threshold_alt; // Are you chilling?
+  DESCENT_condition = deltaAlt < 0 && deltaPressure > 0; // Are you falling?
+  // Annie are you okay? Are you okay Annie?
 //---------------------------------------------
 // Set up timing flag
+// //FINITE STATE MACHINE -- WIP
+// if ((ASCENT_condition || STABILIZATION_condition || DESCENT_condition) && !STATE_timerStarted){
+//   STATE_timerStarted = true; 
+//   STATE_timerStart = current_time;
+// }
+// else if (!ASCENT_condition && !STABILIZATION_condition && !DESCENT_condition && !LANDED_condition){
+//   STATE_timerStarted = false;
+// }
 
-if ((ASCENT_condition || STABILIZATION_condition || DESCENT_condition) && !STATE_timerStarted){
-  STATE_timerStarted = true; 
-  STATE_timerStart = current_time;
-}
-else if (!ASCENT_condition && !STABILIZATION_condition && !DESCENT_condition && !LANDED_condition){
-  STATE_timerStarted = false;
-}
-
-
-if (ASCENT_condition && current_time - STATE_timerStart >= 10000){
-  CURRENT_STATE = ASCENT;
-}
-else if (STABILIZATION_condition && current_time - STATE_timerStart >= 10000){
-  CURRENT_STATE = STABILIZATION;
-}
-else if (DESCENT_condition && current_time - STATE_timerStart >= 10000){
-  CURRENT_STATE = DESCENT;
-}
+// // Gauge CURRENT_STATE
+// if (ASCENT_condition && current_time - STATE_timerStart >= 10000){
+//   CURRENT_STATE = ASCENT;
+// }
+// else if (STABILIZATION_condition && current_time - STATE_timerStart >= 10000){
+//   CURRENT_STATE = STABILIZATION;
+// }
+// else if (DESCENT_condition && current_time - STATE_timerStart >= 10000){
+//   CURRENT_STATE = DESCENT;
+// }
 }
 //17 reference vars // Directly reference the struct to save memory
 void grabTelemetry
@@ -216,29 +218,32 @@ void printTelemetry(data telemetry){
   else if (CURRENT_STATE == LANDED){
     Serial.print("LANDED, ");
   }
-  Serial.print("MISSION_TIME (ms): ");
+  Serial.print("MISSION_TIME: ");
   Serial.print(telemetry.MISSION_TIME);
+  //M9N Unix output
+  Serial.print("ms, UTC_TIME : ");
+  Serial.print(telemetry.UTC_TIME);
   //BME output
-  Serial.print("ms, Altitude: ");
+  Serial.print("s, ALTITUDE: ");
   Serial.print(telemetry.ALTITUDE);
-  Serial.print(", Pressure: ");
+  Serial.print("m, PRESSURE: ");
   Serial.print(telemetry.PRESSURE);
-  Serial.print(", Temperature: ");
+  Serial.print("hPa, TEMPERATURE: ");
   Serial.print(telemetry.TEMPERATURE);
-  Serial.print(", Humidity: ");
+  Serial.print("°C, HUMIDITY: ");
   Serial.print(telemetry.HUMIDITY);
   //BNO output
-  Serial.print(", ACCEL_X: ");
+  Serial.print("%, ACCEL_X: ");
   Serial.println(telemetry.ACCEL_X);
-  Serial.print(", ACCEL_Y: ");
+  Serial.print("m/s^2, ACCEL_Y: ");
   Serial.print(telemetry.ACCEL_Y);
-  Serial.print(", ACCEL_Z: ");
+  Serial.print("m/s^2, ACCEL_Z: ");
   Serial.println(telemetry.ACCEL_Z);
-  Serial.print(", GYRO_X: ");
+  Serial.print("m/s^2, GYRO_X: ");
   Serial.print(telemetry.GYRO_X);
-  Serial.print(", GYRO_Y: ");
+  Serial.print("rads, GYRO_Y: ");
   Serial.print(telemetry.GYRO_Y);
-  Serial.print(", GYRO_Z: ");
+  Serial.print("rads, GYRO_Z: ");
   Serial.print(telemetry.GYRO_Z);
   Serial.print(", ORIENT_X: ");
   Serial.print(telemetry.ORIENT_X);
@@ -247,14 +252,13 @@ void printTelemetry(data telemetry){
   Serial.print(", ORIENT_Z: ");
   Serial.print(telemetry.ORIENT_Z);
   // M9N outputs
-  Serial.print("MISSION_TIME: ");
-  Serial.print(telemetry.MISSION_TIME);
   Serial.print(", GPS_ALT: ");
   Serial.print(telemetry.GPS_ALTITUDE);
   Serial.print(", GPS_LAT: ");
   Serial.print(telemetry.GPS_LATITUDE);
   Serial.print(", GPS_LONG: ");
   Serial.print(telemetry.GPS_LONGITUDE);
+  printPowerReport(); // INA260 measurements
   Serial.println();
 
 
@@ -312,19 +316,16 @@ double PID_Z(double error_Z){
 
 
 void printPowerReport() {
-  Serial.print("Current: ");
+  Serial.print("CURRENT: ");
   Serial.print(ina260.readCurrent());
-  Serial.println(" mA");
+  Serial.print(" mA");
 
-  Serial.print("Bus Voltage: ");
+  Serial.print(", BUS VOLTAGE: ");
   Serial.print(ina260.readBusVoltage());
-  Serial.println(" mV");
+  Serial.print(" mV");
 
-  Serial.print("Power: ");
+  Serial.print(", POWER: ");
   Serial.print(ina260.readPower());
-  Serial.println(" mW");
-
-  Serial.println();
-  delay(1000);
+  Serial.print(" mW");
 }
 
