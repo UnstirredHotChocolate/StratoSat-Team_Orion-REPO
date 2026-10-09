@@ -44,7 +44,6 @@ Error ErrorCode;
 SHC_BME280 BMEsensor;
 BNO055 BNOsensor;
 M9N M9Nsensor;
-// Adafruit_INA260 ina260 = Adafruit_INA260();
 /*
 -----------------------------------------------------
 PID CONTROLLER STUFF
@@ -86,32 +85,35 @@ void printTelemetry(data telemetry);
 // File telemetryFile; //Create a .csv file
 void setup() {
   // put your setup code here, to run once:
-  // ErrorCode = BNOsensor.init();
+  pinMode(LED_BUILTIN, OUTPUT);
+  BNOsensor.init();
   ina260.begin();
   ErrorCode = BMEsensor.init(); // Initialize BME280 sensor
-  // M9Nsensor.init(); // Initialize M9N sensor // TESTING: M9N
+
+  // M9Nsensor.init(); // Initialize M9N sensor // 
   Serial.begin(9600);
+  Wire.begin();
+  Wire1.begin();
   // SD.begin();
   // telemetryFile = SD.open("telemetry.csv")
-  pinMode(LED_BUILTIN, OUTPUT);
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // Determine deltaTime
-  //Do prefetches to get measurement 
-  current_time = millis();
-  M9Nsensor.prefetchData();
-  // BMEsensor.prefetchData();
-  // BNOsensor.prefetchData();
-  digitalWrite(LED_BUILTIN, HIGH);
+  // Determine error
   if (ErrorCode == 1){
     Serial.println("Error Code: 1");
   }
   else {
     Serial.println("Error Code: 0");
   }
+  //Do prefetches to get measurement 
+  current_time = millis(); 
+  BNOsensor.prefetchData();
+  BMEsensor.prefetchData(); //PREFETCH NOT WORKING
+  digitalWrite(LED_BUILTIN, HIGH);
+  // M9Nsensor.prefetchData();
   grabTelemetry(telemetry);
   printTelemetry(telemetry);
   // stateBoolCheck();
@@ -151,25 +153,25 @@ void stateBoolCheck(){
   // Annie are you okay? Are you okay Annie?
 //---------------------------------------------
 // Set up timing flag
-// //FINITE STATE MACHINE -- WIP
-// if ((ASCENT_condition || STABILIZATION_condition || DESCENT_condition) && !STATE_timerStarted){
-//   STATE_timerStarted = true; 
-//   STATE_timerStart = current_time;
-// }
-// else if (!ASCENT_condition && !STABILIZATION_condition && !DESCENT_condition && !LANDED_condition){
-//   STATE_timerStarted = false;
-// }
 
-// // Gauge CURRENT_STATE
-// if (ASCENT_condition && current_time - STATE_timerStart >= 10000){
-//   CURRENT_STATE = ASCENT;
-// }
-// else if (STABILIZATION_condition && current_time - STATE_timerStart >= 10000){
-//   CURRENT_STATE = STABILIZATION;
-// }
-// else if (DESCENT_condition && current_time - STATE_timerStart >= 10000){
-//   CURRENT_STATE = DESCENT;
-// }
+if ((ASCENT_condition || STABILIZATION_condition || DESCENT_condition) && !STATE_timerStarted){
+  STATE_timerStarted = true; 
+  STATE_timerStart = current_time;
+}
+else if (!ASCENT_condition && !STABILIZATION_condition && !DESCENT_condition && !LANDED_condition){
+  STATE_timerStarted = false;
+}
+
+// Gauge CURRENT_STATE
+if (ASCENT_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = ASCENT;
+}
+else if (STABILIZATION_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = STABILIZATION;
+}
+else if (DESCENT_condition && current_time - STATE_timerStart >= 10000){
+  CURRENT_STATE = DESCENT;
+}
 }
 //17 reference vars // Directly reference the struct to save memory
 void grabTelemetry
@@ -197,7 +199,7 @@ void grabTelemetry
   telemetry.GPS_ALTITUDE = M9Nsensor.getAltitude();
   telemetry.GPS_LATITUDE = M9Nsensor.getLatitude();
   telemetry.GPS_LONGITUDE = M9Nsensor.getLongitude();
-
+  telemetry.SIV = M9Nsensor.getSIV();
 }
 
 void printTelemetry(data telemetry){
@@ -223,12 +225,12 @@ void printTelemetry(data telemetry){
   //M9N Unix output
   Serial.print("ms, UTC_TIME : ");
   Serial.print(telemetry.UTC_TIME);
-  //BME output
+  // //BME output
   Serial.print("s, ALTITUDE: ");
   Serial.print(telemetry.ALTITUDE);
   Serial.print("m, PRESSURE: ");
   Serial.print(telemetry.PRESSURE);
-  Serial.print("hPa, TEMPERATURE: ");
+  Serial.print("mb, TEMPERATURE: ");
   Serial.print(telemetry.TEMPERATURE);
   Serial.print("°C, HUMIDITY: ");
   Serial.print(telemetry.HUMIDITY);
@@ -241,16 +243,17 @@ void printTelemetry(data telemetry){
   Serial.println(telemetry.ACCEL_Z);
   Serial.print("m/s^2, GYRO_X: ");
   Serial.print(telemetry.GYRO_X);
-  Serial.print("rads, GYRO_Y: ");
+  Serial.print(" rads, GYRO_Y: ");
   Serial.print(telemetry.GYRO_Y);
-  Serial.print("rads, GYRO_Z: ");
+  Serial.print(" rads, GYRO_Z: ");
   Serial.print(telemetry.GYRO_Z);
-  Serial.print(", ORIENT_X: ");
+  Serial.print(" rads, ORIENT_X: ");
   Serial.print(telemetry.ORIENT_X);
-  Serial.print(", ORIENT_Y: ");
+  Serial.print("°, ORIENT_Y: ");
   Serial.print(telemetry.ORIENT_Y);
-  Serial.print(", ORIENT_Z: ");
+  Serial.print("°, ORIENT_Z: ");
   Serial.print(telemetry.ORIENT_Z);
+  Serial.print("°");
   // M9N outputs
   Serial.print(", GPS_ALT: ");
   Serial.print(telemetry.GPS_ALTITUDE);
@@ -258,10 +261,10 @@ void printTelemetry(data telemetry){
   Serial.print(telemetry.GPS_LATITUDE);
   Serial.print(", GPS_LONG: ");
   Serial.print(telemetry.GPS_LONGITUDE);
+  Serial.print(", SIV: ");
+  Serial.print(telemetry.SIV);
   printPowerReport(); // INA260 measurements
   Serial.println();
-
-
 
 }
 
@@ -316,7 +319,7 @@ double PID_Z(double error_Z){
 
 
 void printPowerReport() {
-  Serial.print("CURRENT: ");
+  Serial.print(", CURRENT: ");
   Serial.print(ina260.readCurrent());
   Serial.print(" mA");
 
