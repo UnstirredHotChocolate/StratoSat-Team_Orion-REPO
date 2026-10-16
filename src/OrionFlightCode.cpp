@@ -15,19 +15,18 @@
 -----------------------------------------------------
 SOFTWARE STATE VARIABLES:
 */
-void stateBoolCheck(state &CURRENT_STATE, unsigned long currentMillis);
+void stateBoolCheck(state &CURRENT_STATE, data telemetry);
 state CURRENT_STATE = LAUNCH; //Start in the launch state
 
-unsigned long previousMillis = 0;
-const unsigned long duration = 15000;
-
+unsigned long previousMillis = 0; 
+unsigned long currentTime;
 bool ASCENT_condition;
 bool STABILIZATION_condition; 
 bool DESCENT_condition;
 bool LANDED_condition;
-bool STATE_condition;
-bool STATE_timerStarted;
 
+
+bool conditionHeldFor(bool condition,unsigned long duration, unsigned long &startTime, bool &timerRunning);
 
 /*
 -----------------------------------------------------
@@ -67,22 +66,16 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Determine program error 
-
-  unsigned long ElapsedTime; 
-  if (ErrorCode == 1){
-    Serial.println("Error Code: 1");
-  }
-  else {
-    Serial.println("Error Code: 0");
-  }
-
   //Do prefetches to get measurement 
+  //Timer Stuff Here
+  currentTime = millis();
+  //End of timer.
   BNOsensor.prefetchData();
   BMEsensor.prefetchData(); //PREFETCH NOT WORKING
   M9Nsensor.prefetchData();
   grabTelemetry(telemetry);
   printTelemetry(telemetry);
-  stateBoolCheck(CURRENT_STATE);
+  // stateBoolCheck(CURRENT_STATE, telemetry);
 
 
 
@@ -93,27 +86,36 @@ void loop() {
 
 }
 
-void stateBoolCheck(state &CURRENT_STATE){
+void stateBoolCheck(state &CURRENT_STATE, data telemetry){
   //------------------------------------------------
   /*
   VARIABLES 
+  *///---------------------------------------
+  /*
+  NOTE: This function was created partially with the assitance of AI. I've done my best to vet the updated code beforehand, and so far, it looks okay. - CH
+  conditionHeldFor looks 
+  Maybe I'm just dumb, but I have a hard time with timers. - CH
+  
+  
   */
+ //Time Starts
+  static unsigned long AscentTimeStart = 0;
+  static unsigned long StableTimeStart = 0;
+  static unsigned long DescentTimeStart = 0;
+  static unsigned long LandTimeStart = 0;
+  //Bools
+  static bool AscentTimerStarted = false;
+  static bool StableTimeStarted = false;
+  static bool DescentTimeStarted = false;
+  static bool LandedTimeStarted = false;
+  //Durations
+  const unsigned long duration = 15000;
   const int LandedDuration = 600000;
-  unsigned long currentMillis = millis(); // TIME
-  unsigned long TimeElapsed = currentMillis - previousMillis; 
-  bool durationConfirmed = TimeElapsed > duration; 
-  if (durationConfirmed){
-    previousMillis = currentMillis;
-  }
-  else {
-    durationConfirmed = false;
-  }
 
-  bool LandedDurationConfirmed = currentMillis - previousMillis > LandedDuration;
   float deltaAlt; // Determine state changes based on altitude change
   float currentAlt;
   float previousAlt;
-  float threshold_alt = 18000.0;
+  const float threshold_alt = 18000.0;
   float deltaPressure; // Determine state changes based on pressure change
   float currentPressure;
   float previousPressure;
@@ -135,28 +137,56 @@ void stateBoolCheck(state &CURRENT_STATE){
   ASCENT_condition = (deltaAlt > 0 && deltaPressure < 0) || (deltaGPSAlt > 0 && deltaPressure < 0); // Are you flying? 
   STABILIZATION_condition = telemetry.ALTITUDE > threshold_alt || telemetry.GPS_ALTITUDE > threshold_alt; // Are you stabilizing?
   DESCENT_condition = (deltaGPSAlt < 0); // Are you falling?
-  LANDED_condition = (telemetry.ALTITUDE < 1800) && (telemetry.PRESSURE > 980) && (telemetry.PRESSURE < 1013.25);
+  LANDED_condition = (telemetry.GPS_ALTITUDE < 1800 ||telemetry.ALTITUDE < 1800) && (telemetry.PRESSURE > 980) && (telemetry.PRESSURE < 1013.25);
   // Annie are you okay? Are you okay Annie?
 //---------------------------------------------------------------------------------------------------------------------------------------
 
 
-if(CURRENT_STATE == LAUNCH && ASCENT_condition == true && durationConfirmed){
-  CURRENT_STATE == ASCENT; 
+if (CURRENT_STATE == LAUNCH){
+  if (conditionHeldFor(ASCENT_condition, duration, AscentTimeStart, AscentTimerStarted)){
+    CURRENT_STATE = ASCENT;
+    AscentTimerStarted = false;
+  }
 }
-else if (CURRENT_STATE == ASCENT && STABILIZATION_condition == true && durationConfirmed){
-  CURRENT_STATE == STABILIZATION;
+else if (CURRENT_STATE == ASCENT)
+  if (conditionHeldFor(STABILIZATION_condition, duration, StableTimeStart, StableTimeStarted)){
+    CURRENT_STATE = STABILIZATION;
+    StableTimeStarted = false;
+  }
+else if (CURRENT_STATE == STABILIZATION){
+  if (conditionHeldFor(DESCENT_condition, duration, DescentTimeStart, DescentTimeStarted)){
+    CURRENT_STATE = DESCENT;
+    DescentTimeStarted = false;
+  }
 }
-else if (CURRENT_STATE == STABILIZATION && DESCENT_condition == true && durationConfirmed){
-  CURRENT_STATE == DESCENT;
-}
-else if (CURRENT_STATE == DESCENT && LANDED_condition == true && TimeElapsed > LandedDuration){
-  CURRENT_STATE == LANDED;
-}
-
+else if (CURRENT_STATE == DESCENT)
+  if (conditionHeldFor(LANDED_condition, LandedDuration, LandTimeStart, LandedTimeStarted)){
+    CURRENT_STATE = LANDED;
+    LandedTimeStarted = false;
+  }
 // Gauge CURRENT_STATE
 } // End of function. 
 
 
+bool conditionHeldFor(bool condition,unsigned long duration, unsigned long &startTime, bool &timerRunning) {
+    unsigned long currentMillis = millis();
+
+    // Reset the timer if the condition becomes false.
+    if (!condition) {
+        timerRunning = false;
+        return false;
+    }
+
+    // Start the timer when the condition first becomes true.
+    if (!timerRunning) {
+        startTime = currentMillis;
+        timerRunning = true;
+    }
+    // Return true when the required duration has elapsed.
+    // Translation: if these conditions are ignored, i.e., when we have true condition and 
+    // the timer has been confirmed to start, we can say that time has passed enough for the condition.  
+    return (unsigned long)(currentMillis - startTime) >= duration;
+}
 
 /*
 
