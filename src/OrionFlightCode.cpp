@@ -8,14 +8,16 @@
 
 // #include <Adafruit_BNO055.h>
 //Custom header files
-#include "ORION.h"
+#include "ORION.h" 
 #include "SHC_BME280.h"
 #include "SHC_BNO055.h"
 #include "SHC_M9N.h"
 /*
+
 -----------------------------------------------------
 SOFTWARE STATE VARIABLES:
 */
+
 void stateBoolCheck(state &CURRENT_STATE, data telemetry);
 state CURRENT_STATE = LAUNCH; //Start in the launch state
 
@@ -72,7 +74,7 @@ void setup() {
 }
 
 void loop() {
-  static double output_X;
+  static double output_X; 
   // put your main code here, to run repeatedly:
   // Determine program error 
   //Do prefetches to get measurement 
@@ -98,10 +100,6 @@ void loop() {
     output_X = PID_X();
     //analogWrite(SolenoidPin, output_X)
   }
-  //If CURRENT_STATE is STABILIZATION do PID control
-
-  // error_X = target_X - telemetry.GYRO_X;
-  //analogWrite something;
 }
 
 void stateBoolCheck(state &CURRENT_STATE, data telemetry){
@@ -388,20 +386,20 @@ PID CONTROLLER STUFF
 */
 // Target coordinates for PID control
 double error_X; 
-double target_X = 0.0;
+const double setpoint_X = 0.0;
 // PID control variables
 double derivative;
 double integral;
 double proportional;
-static double last_error_X = 0;
+double last_error_X;
 double dt;
-static unsigned int last_time = 0;
+unsigned int last_time;
 double output_X; // 
 // PID constants
 const double Kp = 1.0; // Proportional gain
 const double Ki = 0; // Integral gain
 const double Kd = 1.0; // Derivative gain
-static unsigned int now;
+unsigned int now;
 // PID declarations;
 /*---------------------------------------------
   PID controller calculations// Update per loop. 
@@ -409,14 +407,16 @@ static unsigned int now;
   dt = now - last_time;
   last_time = now;
   now = millis();
-  error_X = target_X - telemetry.GYRO_X; // 
+  error_X = setpoint_X - telemetry.GYRO_X; // 
   proportional = error_X;
   integral += error_X * dt;
   derivative = (error_X - last_error_X) / dt;
   last_error_X = error_X;
   output_X = (Kp * proportional) + (Ki * integral) + (Kd * derivative);
 //----------------------------------------------
+if(error_X < -15 || error_X > 15){
   return output_X;
+}
   
 }
 
