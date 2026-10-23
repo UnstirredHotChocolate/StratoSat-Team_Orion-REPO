@@ -48,7 +48,7 @@ Congratulations, you have successfully installed VSCode and set up a project!
 
 
 
-#CORE LOGIC
+# CORE LOGIC
 
 In void setup(), the sensors will be initialized and ready to begin taking measurements. Our function void loop() will take measurements and blink the LEDs built into the payload every second. 
 
