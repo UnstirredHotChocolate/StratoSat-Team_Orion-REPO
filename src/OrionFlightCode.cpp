@@ -338,15 +338,15 @@ void printTelemetry(state CURRENT_STATE, data &telemetry){
   // Serial.print("°, SIV: ");
   // Serial.print(telemetry.SIV);
   //INA260 outputs-----------------------
-  Serial.print(", CURRENT: ");
+  //Serial.print(", CURRENT: ");
   //Serial.print(ina260.readCurrent());
-  Serial.print(" mA");
-  Serial.print(", BUS VOLTAGE: ");
+  //Serial.print(" mA");
+  //Serial.print(", BUS VOLTAGE: ");
   //Serial.print(ina260.readBusVoltage());
-  Serial.print(" mV");
-  Serial.print(", POWER: ");
+  //Serial.print(" mV");
+  //Serial.print(", POWER: ");
   //Serial.print(ina260.readPower());
-  Serial.print(" mW");
+  //Serial.print(" mW");
   Serial.read();
   Serial.println();
 
