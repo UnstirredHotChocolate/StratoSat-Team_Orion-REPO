@@ -79,7 +79,7 @@ void setup() {
   // Code2 = M9Nsensor.init(); // Initialize M9N sensor 
   Code3 = BMEsensor.init(); // Initialize BME280 sensor
   delay(1000);
-  ina260.begin();
+  //ina260.begin();
   Wire.begin();
   delay(1000);
 }
