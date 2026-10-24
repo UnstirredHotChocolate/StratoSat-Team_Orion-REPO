@@ -54,7 +54,7 @@ M9N M9Nsensor;
 
 // BANG BANG CONTROLLER
 
-const double deadzone = 15 * (PI/180); 
+const double deadzone = 10 * (PI/180); 
 const double desired_gyro_speed = 0;
 int output; 
 //----------------------------------
@@ -128,13 +128,13 @@ void loop() {
   //BangBang Backup
 
   if(CURRENT_STATE == STABILIZATION){
-    if (abs(telemetry.GYRO_X - desired_gyro_speed) < deadzone){ 
+    if (abs(telemetry.GYRO_Z - desired_gyro_speed) < deadzone){ 
       output = 0; 
     }
-    else if (telemetry.GYRO_X < desired_gyro_speed){
+    else if (telemetry.GYRO_Z < desired_gyro_speed){
       output = -1; 
     }
-    else if(telemetry.GYRO_X > desired_gyro_speed){
+    else if(telemetry.GYRO_Z > desired_gyro_speed){
       output = 1; 
     }
     if (output == 0){ //Don't control
@@ -394,11 +394,11 @@ void printTelemetry1(state CURRENT_STATE, data &telemetry){
   Serial1.println(telemetry.ACCEL_Z);
   Serial1.print("m/s^2, GYRO_X: ");
   Serial1.print(telemetry.GYRO_X);
-  Serial1.print(" °/s, GYRO_Y: ");
+  Serial1.print(" radians/s, GYRO_Y: ");
   Serial1.print(telemetry.GYRO_Y);
-  Serial1.print(" °/s, GYRO_Z: ");
+  Serial1.print(" radians/s, GYRO_Z: ");
   Serial1.print(telemetry.GYRO_Z);
-  Serial1.print(" °/s, ORIENT_X: ");
+  Serial1.print(" radians/s, ORIENT_X: ");
   Serial1.print(telemetry.ORIENT_X);
   Serial1.print("°, ORIENT_Y: ");
   Serial1.print(telemetry.ORIENT_Y);
