@@ -61,6 +61,7 @@ int output;
 //Telemetry Prototypes
 void grabTelemetry(data &telemetry);
 void printTelemetry(state CURRENT_STATE, data &telemetry);
+void printTelemetry1(state CURRENT_STATE, data &telemetry);
 // Blink Variables
 boolean ledState = LOW;
 const unsigned int interval = 1000; 
