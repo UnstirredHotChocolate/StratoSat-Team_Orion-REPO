@@ -21,7 +21,7 @@ SOFTWARE STATE VARIABLES:
 #define LED_RED 15 //Add actual LED pin num here and below
 #define LED_WHITE 18
 
-#define CCW_SOLENOID 2
+#define CCW_SOLENOID 2 //Add actual solenoid pin num here and below.
 #define CW_SOLENOID 21
 
 state CURRENT_STATE = STABILIZATION; //Start in the launch state// TESTING
@@ -158,8 +158,8 @@ void CheckState(state &CURRENT_STATE, data telemetry){
   static unsigned int SinceDescentTrue;
   static unsigned int SinceLandedTrue; 
 
-//  //Time Starts
-  //Durations
+// DURATIONS
+//
   const unsigned long duration = 15000; //15 seconds. 
   const int LandedDuration = 600000; // 600 seconds.
 
@@ -212,9 +212,9 @@ void CheckState(state &CURRENT_STATE, data telemetry){
       if(timeElapsed - SinceStabilizationTrue >= duration){
         CURRENT_STATE = STABILIZATION;
       }
-      else{
-        SinceStabilizationTrue = timeElapsed; //If stabilization is not true, keep updating until it is true. 
-      }
+    }
+    else{
+      SinceStabilizationTrue = timeElapsed; //If stabilization is not true, keep updating until it is true. 
     }
   }
   else if (CURRENT_STATE == STABILIZATION){
@@ -224,7 +224,7 @@ void CheckState(state &CURRENT_STATE, data telemetry){
       }
     }
     else{
-      SinceDescentTrue = timeElapsed; //If descent is not true, keep updating until
+      SinceDescentTrue = timeElapsed; //If descent is not true, keep updating until true. 
     }
   }
   else if (CURRENT_STATE == DESCENT){
@@ -232,9 +232,9 @@ void CheckState(state &CURRENT_STATE, data telemetry){
       if (timeElapsed - SinceLandedTrue >= LandedDuration){
         CURRENT_STATE = LANDED;
       }
-      else {
-        SinceLandedTrue = timeElapsed; // If landed not true, keep updating until true. 
-      }
+    }
+    else {
+    SinceLandedTrue = timeElapsed; // If landed not true, keep updating until true. 
     }
   }
 }
