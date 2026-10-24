@@ -18,13 +18,12 @@
 SOFTWARE STATE VARIABLES:
 */
 
-#define LED_RED 15 //Add actual LED pin num here and below
-#define LED_WHITE 18
+#define LED_WHITE 2 //LED is Pin 2. 
 
-#define CCW_SOLENOID 2 //Add actual solenoid pin num here and below.
-#define CW_SOLENOID 21
+#define CCW_SOLENOID  10 // Pin 10
+#define CW_SOLENOID 11 // Pin 11
 
-state CURRENT_STATE = STABILIZATION; //Start in the launch state// TESTING
+state CURRENT_STATE = STABILIZATION; //Start in the launch state// TESTING STAB
 void CheckState(state &CURRENT_STATE, data telemetry);
 
 
@@ -36,7 +35,10 @@ bool DESCENT_condition;
 bool LANDED_condition;
 
 elapsedMillis timeElapsed; 
-elapsedMillis timeElapsedBlink; 
+elapsedMillis timeElapsedBlink;
+elapsedMillis timeElapsedPrefetch; 
+
+const unsigned int prefetchInterval = 4000;   
 
 /*
 -----------------------------------------------------
@@ -72,7 +74,6 @@ void setup() {
   Serial1.begin(9600);
   delay(1000);
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(LED_RED, OUTPUT);
   pinMode(LED_WHITE, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   digitalWrite(LED_BUILTIN, LOW);
@@ -90,9 +91,12 @@ void loop() {
   // Determine program error 
   //Do prefetches to get measurement 
   //Timer Stuff Here
-  BMEsensor.prefetchData();
   BNOsensor.prefetchData();
-  M9Nsensor.prefetchData(); 
+  if (timeElapsedPrefetch >= prefetchInterval){ // If 4 seconds have passed.
+    BMEsensor.prefetchData();
+    M9Nsensor.prefetchData();
+    timeElapsedPrefetch = 0; //Reset the timer. 
+  } 
   grabTelemetry(telemetry);
   printTelemetry(CURRENT_STATE, telemetry);
   printTelemetry1(CURRENT_STATE, telemetry);
@@ -117,7 +121,13 @@ void loop() {
   // }
   // }
   //End of timer.
-
+    if (timeElapsedBlink > interval)
+  {
+    ledState = !ledState; // toggle the state from HIGH to LOW to HIGH to LOW ...
+    digitalWrite(LED_WHITE, ledState);
+    timeElapsedBlink = 0; // reset the counter to 0 so the counting starts over...
+  }
+  //  //End of timer.
   // CheckState(CURRENT_STATE, telemetry); UNCOMMENT FUNCTION AFTER STAB TEST
   //BangBang Backup
 
@@ -144,7 +154,6 @@ void loop() {
       digitalWrite(CW_SOLENOID, HIGH);
     }
   }
-  //digitalWrite(SolenoidPIN, output);
   //delay(1000);
 }
 
