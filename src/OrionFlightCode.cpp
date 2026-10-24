@@ -49,7 +49,7 @@ Error Code3;
 SHC_BME280 BMEsensor;
 BNO055 BNOsensor;
 M9N M9Nsensor;
-Adafruit_INA260 ina260 = Adafruit_INA260();
+//Adafruit_INA260 ina260 = Adafruit_INA260();
 
 
 // BANG BANG CONTROLLER
@@ -76,7 +76,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
   digitalWrite(LED_BUILTIN, LOW);
   Code1 = BNOsensor.init(); // Initialize BNO sensor
-  // Code2 = M9Nsensor.init(); // Initialize M9N sensor 
+  Code2 = M9Nsensor.init(); // Initialize M9N sensor 
   Code3 = BMEsensor.init(); // Initialize BME280 sensor
   delay(1000);
   //ina260.begin();
@@ -91,9 +91,10 @@ void loop() {
   //Timer Stuff Here
   BMEsensor.prefetchData();
   BNOsensor.prefetchData();
-  // M9Nsensor.prefetchData(); 
+  M9Nsensor.prefetchData(); 
   grabTelemetry(telemetry);
   printTelemetry(CURRENT_STATE, telemetry);
+  printTelemetry1(CURRENT_STATE, telemetry);
 
   // if ((Code1 == 1 || Code2 == 2 || Code3 == 3)){ 
   //   //If it fails at the start or if it fails during runtime. 
@@ -124,38 +125,33 @@ void loop() {
   // }
   // CheckState(CURRENT_STATE, telemetry); UNCOMMENT FUNCTION AFTER STAB TEST
   //BangBang Backup
-// if(CURRENT_STATE == STABILIZATION){
-//   if (abs(telemetry.GYRO_X - desired_gyro_speed) < deadzone){ 
-//     output = 0; 
-//   }
-//   else if (telemetry.GYRO_X < desired_gyro_speed){
-//     output = -1; 
-//   }
-//   else if(telemetry.GYRO_X > desired_gyro_speed){
-//     output = 1; 
-//   }
 
-//   if (output == 0){ //Don't control
-//     digitalWrite(CCW_SOLENOID, LOW);
-//     digitalWrite(CW_SOLENOID, LOW);
-//   }
-//   else if (output == 1){ //Clockwise error, counter clockwise response
-//     digitalWrite(CCW_SOLENOID, HIGH);
-//     digitalWrite(CW_SOLENOID, LOW);
-//   }
-//   else if (output == -1){ //Counterclockwise error, clockwise response
-//     digitalWrite(CCW_SOLENOID, LOW);
-//     digitalWrite(CW_SOLENOID, HIGH);
-//   }
-
-  
-// }
-  //digitalWrite(SolenoidPIN, output)
-  delay(1000);
+  if(CURRENT_STATE == STABILIZATION){
+    if (abs(telemetry.GYRO_X - desired_gyro_speed) < deadzone){ 
+      output = 0; 
+    }
+    else if (telemetry.GYRO_X < desired_gyro_speed){
+      output = -1; 
+    }
+    else if(telemetry.GYRO_X > desired_gyro_speed){
+      output = 1; 
+    }
+    if (output == 0){ //Don't control
+      digitalWrite(CCW_SOLENOID, LOW);
+      digitalWrite(CW_SOLENOID, LOW);
+    }
+    else if (output == 1){ //Clockwise error, counter clockwise response
+      digitalWrite(CCW_SOLENOID, HIGH);
+      digitalWrite(CW_SOLENOID, LOW);
+    }
+    else if (output == -1){ //Counterclockwise error, clockwise response
+      digitalWrite(CCW_SOLENOID, LOW);
+      digitalWrite(CW_SOLENOID, HIGH);
+    }
+  }
+  //digitalWrite(SolenoidPIN, output);
+  //delay(1000);
 }
-
-
-
 
 void CheckState(state &CURRENT_STATE, data telemetry){
   //------------------------------------------------
@@ -329,14 +325,14 @@ void printTelemetry(state CURRENT_STATE, data &telemetry){
   Serial.print(telemetry.ORIENT_Z);
   Serial.print("°");
   // // M9N outputs-------------------------
-  // Serial.print(", GPS_ALT: ");
-  // Serial.print(telemetry.GPS_ALTITUDE);
-  // Serial.print("m, GPS_LAT: ");
-  // Serial.print(telemetry.GPS_LATITUDE);
-  // Serial.print("°, GPS_LONG: ");
-  // Serial.print(telemetry.GPS_LONGITUDE);
-  // Serial.print("°, SIV: ");
-  // Serial.print(telemetry.SIV);
+  Serial.print(", GPS_ALT: ");
+  Serial.print(telemetry.GPS_ALTITUDE);
+  Serial.print("m, GPS_LAT: ");
+  Serial.print(telemetry.GPS_LATITUDE);
+  Serial.print("°, GPS_LONG: ");
+  Serial.print(telemetry.GPS_LONGITUDE);
+  Serial.print("°, SIV: ");
+  Serial.print(telemetry.SIV);
   //INA260 outputs-----------------------
   //Serial.print(", CURRENT: ");
   //Serial.print(ina260.readCurrent());
@@ -352,82 +348,83 @@ void printTelemetry(state CURRENT_STATE, data &telemetry){
 
 }
 
-// //Serial1
-// // if(Serial.available() > 0){
-// //   char receivedChar;
-// //   receivedChar = Serial.read();
-// //   if (receivedChar = '\n'){
-//       Serial1.print("CURRENT_STATE: ");
-//     if (CURRENT_STATE == LAUNCH){
-//       Serial1.print("LAUNCH, ");
-//     }
-//     else if (CURRENT_STATE == ASCENT){
-//       Serial1.print("ASCENT, ");
-//     }
-//     else if (CURRENT_STATE == STABILIZATION){
-//       Serial1.print("STABILIZATION, ");
-//     }
-//     else if (CURRENT_STATE == DESCENT){
-//       Serial1.print("DESCENT, ");
-//     }
-//     else if (CURRENT_STATE == LANDED){
-//       Serial1.print("LANDED, ");
-//     }
-//     Serial1.print("MISSION_TIME: ");
-//     Serial1.print(telemetry.MISSION_TIME);
-//     //M9N Unix output----------------------
-//     Serial1.print("ms, UTC_TIME : ");
-//     Serial1.print(telemetry.UTC_TIME);
-//     // //BME output------------------------
-//     Serial1.print("s, ALTITUDE: ");
-//     Serial1.print(telemetry.ALTITUDE);
-//     Serial1.print("m, PRESSURE: ");
-//     Serial1.print(telemetry.PRESSURE);
-//     Serial1.print("mb, TEMPERATURE: ");
-//     Serial1.print(telemetry.TEMPERATURE);
-//     Serial1.print("°C, HUMIDITY: ");
-//     Serial1.print(telemetry.HUMIDITY);
-//     //BNO output---------------------------
-//     Serial1.print("%, ACCEL_X: ");
-//     Serial1.println(telemetry.ACCEL_X);
-//     Serial1.print("m/s^2, ACCEL_Y: ");
-//     Serial1.print(telemetry.ACCEL_Y);
-//     Serial1.print("m/s^2, ACCEL_Z: ");
-//     Serial1.println(telemetry.ACCEL_Z);
-//     Serial1.print("m/s^2, GYRO_X: ");
-//     Serial1.print(telemetry.GYRO_X);
-//     Serial1.print(" °/s, GYRO_Y: ");
-//     Serial1.print(telemetry.GYRO_Y);
-//     Serial1.print(" °/s, GYRO_Z: ");
-//     Serial1.print(telemetry.GYRO_Z);
-//     Serial1.print(" °/s, ORIENT_X: ");
-//     Serial1.print(telemetry.ORIENT_X);
-//     Serial1.print("°, ORIENT_Y: ");
-//     Serial1.print(telemetry.ORIENT_Y);
-//     Serial1.print("°, ORIENT_Z: ");
-//     Serial1.print(telemetry.ORIENT_Z);
-//     Serial1.print("°");
-//     // // M9N outputs-------------------------
-//     // Serial1.print(", GPS_ALT: ");
-//     // Serial1.print(telemetry.GPS_ALTITUDE);
-//     // Serial1.print("m, GPS_LAT: ");
-//     // Serial1.print(telemetry.GPS_LATITUDE);
-//     // Serial1.print("°, GPS_LONG: ");
-//     // Serial1.print(telemetry.GPS_LONGITUDE);
-//     // Serial1.print("°, SIV: ");
-//     // Serial1.print(telemetry.SIV);
-//     //INA260 outputs-----------------------
-//     Serial1.print(", CURRENT: ");
-//     Serial1.print(ina260.readCurrent());
-//     Serial1.print(" mA");
-//     Serial1.print(", BUS VOLTAGE: ");
-//     Serial1.print(ina260.readBusVoltage());
-//     Serial1.print(" mV");
-//     Serial1.print(", POWER: ");
-//     Serial1.print(ina260.readPower());
-//     Serial1.print(" mW");
-//     Serial1.println();
-//     } 
+//Serial1
+// if(Serial.available() > 0){
+//   char receivedChar;
+//   receivedChar = Serial.read();
+//   if (receivedChar = '\n'){
+void printTelemetry1(state CURRENT_STATE, data &telemetry){
+    Serial1.print("CURRENT_STATE: ");
+  if (CURRENT_STATE == LAUNCH){
+    Serial1.print("LAUNCH, ");
+  }
+  else if (CURRENT_STATE == ASCENT){
+    Serial1.print("ASCENT, ");
+  }
+  else if (CURRENT_STATE == STABILIZATION){
+    Serial1.print("STABILIZATION, ");
+  }
+  else if (CURRENT_STATE == DESCENT){
+    Serial1.print("DESCENT, ");
+  }
+  else if (CURRENT_STATE == LANDED){
+    Serial1.print("LANDED, ");
+  }
+  Serial1.print("MISSION_TIME: ");
+  Serial1.print(telemetry.MISSION_TIME);
+  //M9N Unix output----------------------
+  Serial1.print("ms, UTC_TIME : ");
+  Serial1.print(telemetry.UTC_TIME);
+  // //BME output------------------------
+  Serial1.print("s, ALTITUDE: ");
+  Serial1.print(telemetry.ALTITUDE);
+  Serial1.print("m, PRESSURE: ");
+  Serial1.print(telemetry.PRESSURE);
+  Serial1.print("mb, TEMPERATURE: ");
+  Serial1.print(telemetry.TEMPERATURE);
+  Serial1.print("°C, HUMIDITY: ");
+  Serial1.print(telemetry.HUMIDITY);
+  //BNO output---------------------------
+  Serial1.print("%, ACCEL_X: ");
+  Serial1.println(telemetry.ACCEL_X);
+  Serial1.print("m/s^2, ACCEL_Y: ");
+  Serial1.print(telemetry.ACCEL_Y);
+  Serial1.print("m/s^2, ACCEL_Z: ");
+  Serial1.println(telemetry.ACCEL_Z);
+  Serial1.print("m/s^2, GYRO_X: ");
+  Serial1.print(telemetry.GYRO_X);
+  Serial1.print(" °/s, GYRO_Y: ");
+  Serial1.print(telemetry.GYRO_Y);
+  Serial1.print(" °/s, GYRO_Z: ");
+  Serial1.print(telemetry.GYRO_Z);
+  Serial1.print(" °/s, ORIENT_X: ");
+  Serial1.print(telemetry.ORIENT_X);
+  Serial1.print("°, ORIENT_Y: ");
+  Serial1.print(telemetry.ORIENT_Y);
+  Serial1.print("°, ORIENT_Z: ");
+  Serial1.print(telemetry.ORIENT_Z);
+  Serial1.print("°");
+  // // M9N outputs-------------------------
+  Serial1.print(", GPS_ALT: ");
+  Serial1.print(telemetry.GPS_ALTITUDE);
+  Serial1.print("m, GPS_LAT: ");
+  Serial1.print(telemetry.GPS_LATITUDE);
+  Serial1.print("°, GPS_LONG: ");
+  Serial1.print(telemetry.GPS_LONGITUDE);
+  Serial1.print("°, SIV: ");
+  Serial1.print(telemetry.SIV);
+  //INA260 outputs-----------------------
+  //Serial1.print(", CURRENT: ");
+  //Serial1.print(ina260.readCurrent());
+  //Serial1.print(" mA");
+  //Serial1.print(", BUS VOLTAGE: ");
+  //Serial1.print(ina260.readBusVoltage());
+  //Serial1.print(" mV");
+  //Serial1.print(", POWER: ");
+  //Serial1.print(ina260.readPower());
+  //Serial1.print(" mW");
+  Serial1.println();
+} 
   
 
 
