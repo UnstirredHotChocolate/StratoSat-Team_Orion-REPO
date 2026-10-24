@@ -67,6 +67,9 @@ const unsigned int interval = 1000;
 
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(9600);
+  Serial1.begin(9600);
+  delay(1000);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_WHITE, OUTPUT);
@@ -75,11 +78,10 @@ void setup() {
   Code1 = BNOsensor.init(); // Initialize BNO sensor
   // Code2 = M9Nsensor.init(); // Initialize M9N sensor 
   Code3 = BMEsensor.init(); // Initialize BME280 sensor
+  delay(1000);
   ina260.begin();
-  Serial.begin(9600);
-  Serial1.begin(9600);
   Wire.begin();
-  
+  delay(1000);
 }
 
 void loop() {
@@ -87,7 +89,7 @@ void loop() {
   // Determine program error 
   //Do prefetches to get measurement 
   //Timer Stuff Here
-  BMEsensor.prefetchData(); 
+  BMEsensor.prefetchData();
   BNOsensor.prefetchData();
   // M9Nsensor.prefetchData(); 
   grabTelemetry(telemetry);
@@ -337,13 +339,13 @@ void printTelemetry(state CURRENT_STATE, data &telemetry){
   // Serial.print(telemetry.SIV);
   //INA260 outputs-----------------------
   Serial.print(", CURRENT: ");
-  Serial.print(ina260.readCurrent());
+  //Serial.print(ina260.readCurrent());
   Serial.print(" mA");
   Serial.print(", BUS VOLTAGE: ");
-  Serial.print(ina260.readBusVoltage());
+  //Serial.print(ina260.readBusVoltage());
   Serial.print(" mV");
   Serial.print(", POWER: ");
-  Serial.print(ina260.readPower());
+  //Serial.print(ina260.readPower());
   Serial.print(" mW");
   Serial.read();
   Serial.println();
