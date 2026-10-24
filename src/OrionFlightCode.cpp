@@ -118,12 +118,6 @@ void loop() {
   // }
   //End of timer.
 
-  // if (timeElapsedBlink > interval)
-  // {
-  //   ledState = !ledState; // toggle the state from HIGH to LOW to HIGH to LOW ...
-  //   digitalWrite(LED_BUILTIN, ledState);
-  //   timeElapsedBlink = 0; // reset the counter to 0 so the counting starts over...
-  // }
   // CheckState(CURRENT_STATE, telemetry); UNCOMMENT FUNCTION AFTER STAB TEST
   //BangBang Backup
 
