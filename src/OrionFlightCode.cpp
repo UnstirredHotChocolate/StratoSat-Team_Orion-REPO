@@ -101,25 +101,7 @@ void loop() {
   printTelemetry(CURRENT_STATE, telemetry);
   printTelemetry1(CURRENT_STATE, telemetry);
 
-  // if ((Code1 == 1 || Code2 == 2 || Code3 == 3)){ 
-  //   //If it fails at the start or if it fails during runtime. 
-  //   //Blink red
-  //   if (timeElapsedBlink > interval)
-  //   {
-  //     ledState = !ledState; // toggle the state from HIGH to LOW to HIGH to LOW ...
-  //     digitalWrite(LED_BUILTIN, ledState); //REPLACE LED_BUILTIN
-  //     timeElapsedBlink = 0; // reset the counter to 0 so the counting starts over...
-  //   }
-  // }
-  // else if (Code1 == 0 && Code2 == 0 && Code3 == 0){
-  //   //Blink white
-  // if (timeElapsedBlink > interval)
-  // {
-  //   ledState = !ledState; // toggle the state from HIGH to LOW to HIGH to LOW ...
-  //   digitalWrite(LED_BUILTIN, ledState);
-  //   timeElapsedBlink = 0; // reset the counter to 0 so the counting starts over...
-  // }
-  // }
+
   //End of timer.
     if (timeElapsedBlink > interval)
   {
